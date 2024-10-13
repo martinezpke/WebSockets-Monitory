@@ -20,7 +20,7 @@ Este proyecto es una aplicación web que permite a los usuarios monitorear métr
 
 ## Requisitos
 
-- Node.js (versión 14 o superior)
+- Node.js (versión v22.9.0 o superior)
 - Prometheus (configurado y en ejecución)
 
 ## Instalación
