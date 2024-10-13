@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard en Tiempo Real</title>
+    <style>
+        /* Estilos generales */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f7f9;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #34495e;
+            margin-bottom: 40px;
+        }
+
+        /* Contenedor de gráficos */
+        #charts {
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+        }
+
+        .chart {
+            width: 45%;
+            background-color: #fff;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+        }
+
+        @media (max-width: 768px) {
+            .chart {
+                width: 100%;
+                margin-bottom: 20px;
+            }
+        }
+
+        /* Personalización de botones */
+        .button-refresh {
+            display: inline-block;
+            padding: 10px 20px;
+            margin-top: 20px;
+            background-color: #3498db;
+            color: #fff;
+            text-align: center;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .button-refresh:hover {
+            background-color: #2980b9;
+        }
+    </style>
+</head>
+<body>
+    <h1>Monitoreo de Rendimiento en Tiempo Real</h1>
+    <div id="charts">
+        <div class="chart">
+            <canvas id="cpuChart"></canvas>
+        </div>
+        <div class="chart">
+            <canvas id="memoryChart"></canvas>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io();
+
+        // Configuración de los gráficos
+        const ctxCpu = document.getElementById('cpuChart').getContext('2d');
+        const ctxMemory = document.getElementById('memoryChart').getContext('2d');
+
+        const cpuChart = new Chart(ctxCpu, {
+            type: 'line',
+            data: {
+                labels: [],  // Tiempo
+                datasets: [{
+                    label: 'Uso de CPU (%)',
+                    data: [],
+                    backgroundColor: 'rgba(231, 76, 60, 0.2)',
+                    borderColor: '#e74c3c',
+                    borderWidth: 2,
+                    pointBackgroundColor: '#e74c3c'
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: { 
+                        beginAtZero: true,
+                        max: 100,
+                        grid: {
+                            color: '#ecf0f1'
+                        }
+                    },
+                    x: {
+                        grid: {
+                            color: '#ecf0f1'
+                        }
+                    }
+                }
+            }
+        });
+
+        const memoryChart = new Chart(ctxMemory, {
+            type: 'line',
+            data: {
+                labels: [],  // Tiempo
+                datasets: [{
+                    label: 'Uso de Memoria (%)',
+                    data: [],
+                    backgroundColor: 'rgba(52, 152, 219, 0.2)',
+                    borderColor: '#3498db',
+                    borderWidth: 2,
+                    pointBackgroundColor: '#3498db'
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: { 
+                        beginAtZero: true,
+                        max: 100,
+                        grid: {
+                            color: '#ecf0f1'
+                        }
+                    },
+                    x: {
+                        grid: {
+                            color: '#ecf0f1'
+                        }
+                    }
+                }
+            }
+        });
+
+        // Escuchar métricas del servidor en tiempo real
+        socket.on('serverMetrics', (data) => {
+            const currentTime = new Date().toLocaleTimeString();
+
+            // Actualizar gráfico de CPU
+            if (cpuChart.data.labels.length > 10) {
+                cpuChart.data.labels.shift();
+                cpuChart.data.datasets[0].data.shift();
+            }
+            cpuChart.data.labels.push(currentTime);
+            cpuChart.data.datasets[0].data.push(data.cpuUsage);
+            cpuChart.update();
+
+            // Actualizar gráfico de RAM
+            if (memoryChart.data.labels.length > 10) {
+                memoryChart.data.labels.shift();
+                memoryChart.data.datasets[0].data.shift();
+            }
+            memoryChart.data.labels.push(currentTime);
+            memoryChart.data.datasets[0].data.push(data.memoryUsage);
+            memoryChart.update();
+        });
+    </script>
+</body>
+</html>
